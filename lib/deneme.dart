@@ -14,8 +14,8 @@ class RandomWord {
   }
 }
 
-void main() {
-  late RandomWord kelime = "";
+void main() async {
+  late RandomWord kelime;
   Future<RandomWord> rndm() async {
     try {
       final response = await Dio(BaseOptions(
@@ -59,9 +59,10 @@ void main() {
   print(y[0]);
   print("a::  $a");
   getWordsDerived().then((value) => print("list ${value[0]}"));
-  final Future<RandomWord> zz = rndm();
-  final kk = zz;
-  print("kelime $kelime");
+  final RandomWord zz = await rndm();
+  print("zz: ${zz.randomVerOfWord}");
+
+  print("kelime ${kelime.randomVerOfWord}");
   // final z = getWordsDerived();
   // print(z);
 }
