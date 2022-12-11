@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:game/word.dart';
 import 'package:game/words_derived.dart';
 import 'package:http/http.dart';
+import 'package:game/test.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,51 +37,64 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final String word = "MÜNFERİT";
-  final String randomOrder = "FMETÜNRİ";
+  static String word = "KULUÇKA";
+  final String randomOrder = "LÇUKAUK";
+  final List<String> wordsCanBeDerived = [
+    "kuluçka",
+    "uçak",
+    "kul",
+    "kauçuk",
+    "kulaç",
+    "çak",
+    "kaç",
+    "kulak",
+    "çal",
+  ];
+  final List<String> listOfGuesses = [];
   late final TextEditingController guessController;
+  late Map<String, dynamic> origin = {};
+  late List<String> setOfOrigin = [];
+  // Future<List<WordsToDerive>> getWordsDerived() async {
+  //   try {
+  //     final response = await Dio(BaseOptions(
+  //       responseType: ResponseType.plain,
+  //       contentType: 'application/json',
+  //     )).get('http://localhost:3001/');
+  //     final res = jsonDecode(response.toString());
+  //     final aListOfWords = (res as List)
+  //         .map((e) => WordsToDerive.fromJson(e.wordsCanBeDerived))
+  //         .toList();
+  //     print("aListOfWords:: $aListOfWords");
+  //     return aListOfWords;
+  //   } catch (e) {
+  //     return Future.error(e);
+  //   }
+  // }
 
-  Future<List<WordsToDerive>> getWordsDerived() async {
-    try {
-      final response = await Dio(BaseOptions(
-        responseType: ResponseType.plain,
-        contentType: 'application/json',
-      )).get('http://localhost:3001/');
-      final res = jsonDecode(response.toString());
-      final aListOfWords = (res as List)
-          .map((e) => WordsToDerive.fromJson(e.wordsCanBeDerived))
-          .toList();
-      print("aListOfWords:: $aListOfWords");
-      return aListOfWords;
-    } catch (e) {
-      return Future.error(e);
-    }
-  }
+  // Future<List<Word>> getHttp() async {
+  //   try {
+  //     final response = await Dio(BaseOptions(
+  //       responseType: ResponseType.plain,
+  //       contentType: 'application/json',
+  //     )).get('http://localhost:3001/');
+  //     final res = json.decode(response.toString());
+  //     final List<Word> aList = (res as List)
+  //         .map(
+  //           (e) => Word.fromJson(e),
+  //         )
+  //         .toList();
+  //     print(" khara ${aList[0].wordsCanBeDerived}");
+  //     //  print(aList[0].thWordsToDeriveeWord);
 
-  Future<List<Word>> getHttp() async {
-    try {
-      final response = await Dio(BaseOptions(
-        responseType: ResponseType.plain,
-        contentType: 'application/json',
-      )).get('http://localhost:3001/');
-      final res = json.decode(response.toString());
-      final List<Word> aList = (res as List)
-          .map(
-            (e) => Word.fromJson(e),
-          )
-          .toList();
-      print(" khara ${aList[0].wordsCanBeDerived}");
-      //  print(aList[0].thWordsToDeriveeWord);
-
-      return aList;
-      //  print("res: $res");
-      //  print("this is res $response");
-      // print("response:: ${jsonDecode(response.toString())}");
-    } catch (e) {
-      print("e:: $e");
-      return Future.error(e);
-    }
-  }
+  //     return aList;
+  //     //  print("res: $res");
+  //     //  print("this is res $response");
+  //     // print("response:: ${jsonDecode(response.toString())}");
+  //   } catch (e) {
+  //     print("e:: $e");
+  //     return Future.error(e);
+  //   }
+  // }
 
 //  late final TextEditingController textController;
 //  late final TextEditingController textController2;
@@ -88,7 +102,10 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     guessController = TextEditingController();
-    getWordsDerived();
+    origin = test(word);
+    setOfOrigin = word.split("").toSet().toList();
+
+    // getWordsDerived();
     // textController = TextEditingController();
     // textController2 = TextEditingController();
   }
@@ -96,12 +113,15 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     super.dispose();
+    guessController.dispose();
     // textController.dispose();
     // textController2.dispose()
   }
 
   @override
   Widget build(BuildContext context) {
+    print("this is origin from build $origin");
+    print("this is setOfOrigin from build $setOfOrigin");
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
@@ -148,23 +168,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
                         // Border.all(color: Colors.black, width: 5)),
                         child: Center(
-                            child: FutureBuilder<List<Word>>(
-                          future: getHttp(),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData) {
-                              return Text(
-                                snapshot.data![0].randomVerOfWord[index]
-                                    .toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 25,
-                                ),
-                              );
-                            } else if (snapshot.hasError) {
-                              return Text("${snapshot.error}");
-                            }
-                            return const CircularProgressIndicator();
-                          },
-                        )),
+                          child: Text(
+                            randomOrder[index].toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 25,
+                            ),
+                          ),
+                        ),
                       )),
             ),
           ),
@@ -177,15 +187,24 @@ class _MyHomePageState extends State<MyHomePage> {
                   icon: Icon(Icons.abc),
                   enabledBorder: OutlineInputBorder()),
             ),
-          )
+          ),
+          for (var aGuess in listOfGuesses)
+            Text(listOfGuesses.isEmpty ? "waiting for the guesses" : aGuess)
         ],
       ),
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          if (guessController.text.toLowerCase() == word.toLowerCase())
-            print("true");
-          else
-            print("no");
+          print("origin $origin");
+          bool isTrue = check(origin, guessController.text);
+
+          if (isTrue) {
+            setState(() {
+              listOfGuesses.add(guessController.text);
+            });
+          } else {
+            print("a char is used more than allowed");
+          }
         },
         child: const Icon(Icons.key_rounded),
       ),
