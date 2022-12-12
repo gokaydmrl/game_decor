@@ -1,3 +1,5 @@
+import 'package:game/dnm.dart';
+
 Map<String, dynamic> test(String origin) {
   Map<String, int> obj = {};
   // int numOfChar = 0;
@@ -45,30 +47,39 @@ Map<String, dynamic> guess(String guessWord) {
 
 // final Map<String, dynamic> origin = test("kuluçka");
 
-bool check(Map<String, dynamic> origin, String guessWord) {
+bool check(
+    List<String> argList, Map<String, dynamic> origin, String guessWord) {
+  print("origin from test $origin");
   final Map<String, dynamic> guessUser = guess(guessWord);
-  print("guessUser: $guessUser");
+  print("guessUser TEST.DART: $guessUser");
   final List guessList = guessUser.keys.toList();
-  print("guessList $guessList");
+  print("guessList TEST.DART $guessList");
+  final isTrue = isContain(argList, guessWord);
   for (var n in guessList) {
-    if (guessUser[n] > origin[n]) {
-      print("you used character $n more than the original amount");
-
+    if (!isTrue || guessUser[n] > origin[n]) {
+      print("sth else gone wrong");
       return false;
     }
   }
   return true;
 }
 
-bool isContain(List<String> argList, String arg) {
-  final charSetOfArg = arg.split("").toSet().toList();
-  for (var n = 0; n < charSetOfArg.length; n++) {
-    if (argList.contains(charSetOfArg[n])) {
-      return true;
-    }
-  }
-  return false;
+bool checkContains(List<String> arg1, String arg2) => arg1.contains(arg2);
+
+void main() {
+  final x = checkContains(["arg1", "arg2"], "arg3");
+  print(x);
 }
+
+// bool isContain(List<String> argList, String arg) {
+//   final charSetOfArg = arg.split("").toSet().toList();
+//   for (var n = 0; n < charSetOfArg.length; n++) {
+//     if (argList.contains(charSetOfArg[n])) {
+//       return true;
+//     }
+//   }
+//   return false;
+// }
   // Map<String, dynamic> obje = test();
   // print("obje:: $obje");
   // Map<String, dynamic> objec = guess("asdfg");

@@ -6,6 +6,7 @@ import 'package:game/word.dart';
 import 'package:game/words_derived.dart';
 import 'package:http/http.dart';
 import 'package:game/test.dart';
+import 'package:game/dnm.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,11 +50,19 @@ class _MyHomePageState extends State<MyHomePage> {
     "kaç",
     "kulak",
     "çal",
+    "ulak",
+    "kukla",
+    "kulak",
+    "kuluç",
   ];
   final List<String> listOfGuesses = [];
   late final TextEditingController guessController;
   late Map<String, dynamic> origin = {};
   late List<String> setOfOrigin = [];
+  bool isError = false;
+  String errorMessage =
+      "the word you entered is either meaningless or contains a character used more than allowed";
+  String emptyListMessage = "waith";
   // Future<List<WordsToDerive>> getWordsDerived() async {
   //   try {
   //     final response = await Dio(BaseOptions(
@@ -104,18 +113,12 @@ class _MyHomePageState extends State<MyHomePage> {
     guessController = TextEditingController();
     origin = test(word);
     setOfOrigin = word.split("").toSet().toList();
-
-    // getWordsDerived();
-    // textController = TextEditingController();
-    // textController2 = TextEditingController();
   }
 
   @override
   void dispose() {
     super.dispose();
     guessController.dispose();
-    // textController.dispose();
-    // textController2.dispose()
   }
 
   @override
@@ -124,13 +127,20 @@ class _MyHomePageState extends State<MyHomePage> {
     print("this is setOfOrigin from build $setOfOrigin");
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: ListView(
         children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 24, bottom: 20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    "words remaining ${listOfGuesses.length}/${wordsCanBeDerived.length}")
+              ],
+            ),
+          ),
           Center(
             child: Padding(
               // Move it to the top a little bit
@@ -143,9 +153,9 @@ class _MyHomePageState extends State<MyHomePage> {
               child: GridView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   // Statically give the count, so that MAXIMUM PERFORMANCEEE
-                  itemCount: 7,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 7,
+                  itemCount: word.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: word.length,
                   ),
 
                   // Shrink the size, otherwise it uses unlimited height and enables scroll
@@ -155,7 +165,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         height: 60,
                         width: 60,
                         decoration: BoxDecoration(
-                          border: index < 6
+                          border: index < word.length - 1
                               ? const Border(
                                   top:
                                       BorderSide(color: Colors.black, width: 3),
@@ -182,29 +192,42 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: guessController,
-              decoration: const InputDecoration(
-                  label: Text("your guess"),
-                  icon: Icon(Icons.abc),
-                  enabledBorder: OutlineInputBorder()),
+              decoration: InputDecoration(
+                label: const Text("your guess"),
+                icon: const Icon(Icons.abc),
+                enabledBorder: const OutlineInputBorder(),
+                errorText: isError ? errorMessage : null,
+                errorMaxLines: 2,
+              ),
             ),
           ),
           for (var aGuess in listOfGuesses)
-            Text(listOfGuesses.isEmpty ? "waiting for the guesses" : aGuess)
+            Flexible(
+                child: Text(listOfGuesses.isEmpty ? emptyListMessage : aGuess))
         ],
       ),
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           print("origin $origin");
-          bool isTrue = check(origin, guessController.text);
-
-          if (isTrue) {
+          bool isContainsWord = checkContains(
+              wordsCanBeDerived, guessController.text.toLowerCase());
+          bool isTrue = check(setOfOrigin, origin, guessController.text);
+          bool isContainsChar = isContain(setOfOrigin, guessController.text);
+          if (isTrue && isContainsChar && isContainsWord) {
             setState(() {
               listOfGuesses.add(guessController.text);
+              isError = false;
             });
           } else {
-            print("a char is used more than allowed");
+            setState(() {
+              isError = true;
+            });
+
+            print(
+                "the word you entered is either meaningless or contains a character used more than allowed");
           }
+          guessController.text = "";
         },
         child: const Icon(Icons.key_rounded),
       ),
