@@ -20,3 +20,5 @@ bool isContain(List<String> argList, String arg) {
   print("true");
   return true;
 }
+
+bool checkIfContainsWord(List<String> arg1, String arg2) => arg1.contains(arg2);

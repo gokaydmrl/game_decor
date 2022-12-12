@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -15,7 +16,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -63,6 +63,56 @@ class _MyHomePageState extends State<MyHomePage> {
   String errorMessage =
       "the word you entered is either meaningless or contains a character used more than allowed";
   String emptyListMessage = "waith";
+  void addToList(String guessWord) {
+    listOfGuesses.add(guessWord.toUpperCase());
+  }
+
+  ///
+  Future<void> showRulesDialogBuilder(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Basic dialog title'),
+          content: const Text('A dialog is a type of modal window that\n'
+              'appears in front of app content to\n'
+              'provide critical information, or prompt\n'
+              'for a decision to be made.'),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Disable'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Enable'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  bool dnm = false;
+  bool deneme() {
+    setState(() {
+      dnm = !dnm;
+    });
+    return dnm;
+  }
+
+  ///
+
   // Future<List<WordsToDerive>> getWordsDerived() async {
   //   try {
   //     final response = await Dio(BaseOptions(
@@ -110,9 +160,16 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+
     guessController = TextEditingController();
     origin = test(word);
     setOfOrigin = word.split("").toSet().toList();
+
+    // scheduleMicrotask(() => showRulesDialogBuilder(context));
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      showRulesDialogBuilder(context);
+    });
   }
 
   @override
@@ -125,6 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     print("this is origin from build $origin");
     print("this is setOfOrigin from build $setOfOrigin");
+    print("dnm $dnm");
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -132,12 +190,36 @@ class _MyHomePageState extends State<MyHomePage> {
       body: ListView(
         children: [
           Padding(
-            padding: const EdgeInsets.only(left: 24, bottom: 20),
+            padding: const EdgeInsets.only(left: 24, bottom: 20, top: 20),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                    "words remaining ${listOfGuesses.length}/${wordsCanBeDerived.length}")
+                AnimatedContainer(
+                  onEnd: () {
+                    setState(() {
+                      dnm = false;
+                    });
+                  },
+                  width: 200,
+                  height: 30,
+                  duration: const Duration(milliseconds: 750),
+                  curve: Curves.fastOutSlowIn,
+                  padding: const EdgeInsets.all(5.0),
+                  decoration: BoxDecoration(
+                    color: dnm
+                        ? Color.fromARGB(239, 41, 199, 9)
+                        : Color.fromARGB(255, 255, 255, 255),
+                    border: Border(
+                      top: BorderSide(color: Color.fromARGB(255, 19, 0, 0)),
+                      left: BorderSide(color: Color.fromARGB(255, 19, 0, 0)),
+                      right: BorderSide(color: Color.fromARGB(255, 19, 0, 0)),
+                      bottom: BorderSide(
+                          color: Color.fromARGB(255, 19, 0, 0), width: 4),
+                    ),
+                  ),
+                  child: Text(
+                      "WORDS REMAINING ${listOfGuesses.length}/${wordsCanBeDerived.length}"),
+                )
               ],
             ),
           ),
@@ -191,6 +273,12 @@ class _MyHomePageState extends State<MyHomePage> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
+              textCapitalization: TextCapitalization.characters,
+              onChanged: (value) {
+                guessController.value = TextEditingValue(
+                    text: value.toUpperCase(),
+                    selection: guessController.selection);
+              },
               controller: guessController,
               decoration: InputDecoration(
                 label: const Text("your guess"),
@@ -202,22 +290,31 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ),
           for (var aGuess in listOfGuesses)
-            Flexible(
-                child: Text(listOfGuesses.isEmpty ? emptyListMessage : aGuess))
+            Text(listOfGuesses.isEmpty ? emptyListMessage : aGuess)
         ],
       ),
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           print("origin $origin");
+          bool checkIfListContainsWord = checkIfContainsWord(
+              listOfGuesses, guessController.text.toUpperCase());
           bool isContainsWord = checkContains(
               wordsCanBeDerived, guessController.text.toLowerCase());
-          bool isTrue = check(setOfOrigin, origin, guessController.text);
-          bool isContainsChar = isContain(setOfOrigin, guessController.text);
-          if (isTrue && isContainsChar && isContainsWord) {
+          bool isTrue =
+              check(setOfOrigin, origin, guessController.text.toUpperCase());
+          bool isContainsChar =
+              isContain(setOfOrigin, guessController.text.toUpperCase());
+          if (!checkIfListContainsWord &&
+              isTrue &&
+              isContainsChar &&
+              isContainsWord) {
+            deneme();
             setState(() {
-              listOfGuesses.add(guessController.text);
+              addToList(guessController.text);
               isError = false;
+
+              print("setStaetednm $dnm");
             });
           } else {
             setState(() {
